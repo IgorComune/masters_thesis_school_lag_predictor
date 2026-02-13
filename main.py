@@ -1,4 +1,4 @@
-from src.start_services import ServiceLauncher
+from scripts.start_services import ServiceLauncher
 from src.data.ingestion import run_ingestion
 from src.data.transformation import build_longitudinal_dataset
 
