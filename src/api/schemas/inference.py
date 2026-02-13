@@ -5,5 +5,5 @@ class InferenceRequest(BaseModel):
     ips: float
     iaa: float
     ieg: float
-    nº_av: float
+    no_av: float
     ida: float

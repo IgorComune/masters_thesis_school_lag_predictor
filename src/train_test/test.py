@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 # ==========================================================
 
 FEATURE_COLUMNS = [
-    "ipv", "ips", "iaa", "ieg", "nº_av", "ida", "media"
+    "ipv", "ips", "iaa", "ieg", "no_av", "ida", "media"
 ]
 
 TARGET_COLUMN = "defasagem"

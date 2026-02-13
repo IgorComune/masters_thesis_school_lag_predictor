@@ -2,7 +2,7 @@
         Selected Model: XGBoost (Optuna)
 
         Justification:
-        - Meets recall requirement >= 0.85: 0.901
-        - Best PR-AUC among qualified models: 0.917
-        - Acceptable precision: 0.857
+        - Meets recall requirement >= 0.85: 0.913
+        - Best PR-AUC among qualified models: 0.922
+        - Acceptable precision: 0.868
         

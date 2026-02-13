@@ -1,8 +1,9 @@
 """
-Clean Training Pipeline for XGBoost + Optuna
+Training Pipeline for XGBoost + Optuna (Production Ready)
 
-- Lê dados de data/processed/
-- Salva modelo em ./models
+- Padroniza nomes de features
+- Remove caracteres especiais
+- Salva modelo em src/models
 """
 
 import argparse
@@ -47,20 +48,20 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class Config:
-    data_path: Path = Path("data/processed/students_feature_engineering.csv")
+    data_path: Path
     random_state: int = 42
     test_size: float = 0.15
     val_size: float = 0.1765
     n_trials: int = 50
     cv_folds: int = 5
+
     feature_columns: list = field(default_factory=lambda: [
-        "ipv", "ips", "iaa", "ieg", "nº_av", "ida", "media"
+        "ipv", "ips", "iaa", "ieg", "no_av", "ida", "media"
     ])
     target_column: str = "defasagem"
 
     def __post_init__(self):
-        # Salva sempre em ./models (relativo ao diretório de execução)
-        self.models_dir = Path.cwd() / "src/models"
+        self.models_dir = Path("src/models")
         self.models_dir.mkdir(parents=True, exist_ok=True)
 
 
@@ -69,10 +70,11 @@ class Config:
 # ==========================================================
 
 def load_data(config: Config) -> pd.DataFrame:
-    if not config.data_path.exists():
-        raise FileNotFoundError(f"Dataset not found at {config.data_path}")
-
     df = pd.read_csv(config.data_path)
+
+    # 🔥 Padroniza nome da coluna problemática
+    if "nº_av" in df.columns:
+        df = df.rename(columns={"nº_av": "no_av"})
 
     required = config.feature_columns + [config.target_column]
     missing = set(required) - set(df.columns)
@@ -177,24 +179,19 @@ def evaluate(model, X, y):
     y_pred = model.predict(X)
     y_proba = model.predict_proba(X)[:, 1]
 
-    metrics = {
+    tn, fp, fn, tp = confusion_matrix(y, y_pred).ravel()
+
+    return {
         "recall": recall_score(y, y_pred),
         "precision": precision_score(y, y_pred),
         "f1": f1_score(y, y_pred),
         "roc_auc": roc_auc_score(y, y_proba),
         "pr_auc": average_precision_score(y, y_proba),
-    }
-
-    tn, fp, fn, tp = confusion_matrix(y, y_pred).ravel()
-
-    metrics.update({
         "true_negatives": int(tn),
         "false_positives": int(fp),
         "false_negatives": int(fn),
         "true_positives": int(tp),
-    })
-
-    return metrics
+    }
 
 
 # ==========================================================
