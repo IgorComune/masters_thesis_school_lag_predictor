@@ -1,7 +1,7 @@
 import pandas as pd
 import json
 
-LOG_PATH = "monitoring/inference_logs.jsonl"
+LOG_PATH = "src/monitoring/inference_logs.jsonl"
 
 def health_report():
     records = []

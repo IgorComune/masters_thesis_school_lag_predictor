@@ -1,24 +1,23 @@
+# src/monitoring/prediction_drift.py
 import pandas as pd
-import json
+from . import metrics
 from pathlib import Path
+import json
 
-LOG_PATH = Path("monitoring/inference_logs.jsonl")
+LOG_PATH = Path("src/monitoring/inference_logs.jsonl")
 
 def load_predictions():
     records = []
-
     with open(LOG_PATH, "r") as f:
         for line in f:
             records.append(json.loads(line))
+    return pd.DataFrame(records)
 
-    df = pd.DataFrame(records)
-    return df
-
-def prediction_distribution():
+def update_prediction_metrics():
     df = load_predictions()
-
-    print("\nPrediction statistics:")
-    print(df["prediction"].describe())
-
-    print("\nClass 1 rate:")
-    print((df["prediction"] > 0.5).mean())
+    if df.empty:
+        return
+    # exemplo: proporção de predictions > 0.5
+    ratio = (df["prediction"] > 0.5).mean()
+    # expor como gauge (re-uso DRIFT_KS por falta de outro gauge — adicione um novo gauge se quiser)
+    metrics.DRIFT_KS.labels(feature="prediction_above_0_5_ratio").set(float(ratio))

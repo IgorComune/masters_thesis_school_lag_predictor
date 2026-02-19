@@ -2,7 +2,7 @@ import pandas as pd
 import json
 from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_auc_score
 
-LOG_PATH = "monitoring/inference_logs.jsonl"
+LOG_PATH = "src/monitoring/inference_logs.jsonl"
 
 def evaluate_performance():
     records = []

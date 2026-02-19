@@ -51,6 +51,7 @@ h11==0.16.0
 h2==4.3.0
 hpack==4.1.0
 httpcore==1.0.9
+httptools==0.7.1
 httpx==0.28.1
 huey==2.6.0
 humanize==4.15.0
@@ -109,6 +110,7 @@ platformdirs==4.5.1
 plotly==6.5.2
 pluggy==1.6.0
 prefect==3.6.11
+prometheus-fastapi-instrumentator==7.1.0
 prometheus_client==0.24.1
 prompt_toolkit==3.0.52
 protobuf==6.33.4
@@ -173,6 +175,8 @@ tzdata==2025.3
 tzlocal==5.3.1
 urllib3==2.6.3
 uvicorn==0.40.0
+uvloop==0.22.1
+watchfiles==1.1.1
 wcwidth==0.2.14
 websockets==16.0
 Werkzeug==3.1.5
