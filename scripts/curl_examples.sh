@@ -1,10 +1,1 @@
-curl -X POST "http://127.0.0.1:8000/predict" \
--H "Content-Type: application/json" \
--d '{
-  "ipv": 5,
-  "ips": 6,
-  "iaa": 7,
-  "ieg": 4,
-  "no_av": 3,
-  "ida": 6
-}'
+curl -X POST http://127.0.0.1:8000/inference/predict   -H "Content-Type: application/json"   -d '{"ipv": 1, "ips":2, "iaa":3, "ieg":4, "no_av":5, "ida":6}'

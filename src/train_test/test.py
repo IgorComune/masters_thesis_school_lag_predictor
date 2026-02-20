@@ -49,7 +49,7 @@ TARGET_COLUMN = "defasagem"
 # ==========================================================
 
 def load_model(models_dir: Path):
-    model_files = sorted(models_dir.glob("xgboost_*.pkl"))
+    model_files = sorted(models_dir.glob("model.pkl"))
 
     if not model_files:
         raise FileNotFoundError("No trained model found in ./models")

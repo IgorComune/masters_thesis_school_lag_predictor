@@ -27,3 +27,7 @@
 {"timestamp": "2026-02-19T04:01:44.877792Z", "inputs": {"ipv": 1.0, "ips": 2.0, "iaa": 3.0, "ieg": 4.0, "no_av": 5.0, "ida": 6.0}, "prediction": 0.6752814650535583, "latency": 0.0018854141235351562, "true_label": null}
 {"timestamp": "2026-02-19T04:03:22.238245Z", "inputs": {"ipv": 1.0, "ips": 2.0, "iaa": 3.0, "ieg": 4.0, "no_av": 5.0, "ida": 6.0}, "prediction": 0.6752814650535583, "latency": 0.006138324737548828, "true_label": null}
 {"timestamp": "2026-02-19T04:15:14.301585Z", "inputs": {"ipv": 1.0, "ips": 2.0, "iaa": 3.0, "ieg": 4.0, "no_av": 5.0, "ida": 6.0}, "prediction": 0.6752814650535583, "latency": 0.004337310791015625, "true_label": null}
+{"timestamp": "2026-02-19T22:17:30.232413Z", "inputs": {"ipv": 1.0, "ips": 2.0, "iaa": 3.0, "ieg": 4.0, "no_av": 5.0, "ida": 6.0}, "prediction": 0.6752814650535583, "latency": 0.012026309967041016, "true_label": null}
+{"timestamp": "2026-02-20T02:19:43.446050Z", "inputs": {"ipv": 1.0, "ips": 2.0, "iaa": 3.0, "ieg": 4.0, "no_av": 5.0, "ida": 6.0}, "prediction": 0.6752814650535583, "latency": 0.013677120208740234, "true_label": null}
+{"timestamp": "2026-02-20T02:34:06.727427Z", "inputs": {"ipv": 1.0, "ips": 2.0, "iaa": 3.0, "ieg": 4.0, "no_av": 5.0, "ida": 6.0}, "prediction": 0.6752814650535583, "latency": 0.004999876022338867, "true_label": null}
+{"timestamp": "2026-02-20T02:52:19.576883Z", "inputs": {"ipv": 1.0, "ips": 2.0, "iaa": 3.0, "ieg": 4.0, "no_av": 5.0, "ida": 6.0}, "prediction": 0.6752814650535583, "latency": 0.003092050552368164, "true_label": null}

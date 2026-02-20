@@ -208,7 +208,7 @@ __marimo__/
 
 
 # Dados e artefatos
-data/
+
 mlruns/
 .prefect/
 monitoring/reports/
@@ -241,4 +241,5 @@ Thumbs.db
 *.pdf
 *.db
 
-prometheus-2.45.0.linux-amd64
+prometheus-2.45.0.linux-amd64/
+grafana-10.1.0/
