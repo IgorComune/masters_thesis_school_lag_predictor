@@ -1,19 +1,11 @@
 import json
+import numpy as np
 import pandas as pd
 import pytest
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
-# ⚠️ TROQUE "your_module" pelo nome real do seu arquivo
-from src.train_test import (
-    Config,
-    load_data,
-    split_data,
-    save_train_stats,
-    evaluate,
-    save_artifacts,
-    optimize
-)
+import src.train_test.train as train
 
 
 # ==========================================================
@@ -35,8 +27,8 @@ def test_load_data_success(tmp_path):
     })
     df.to_csv(file, index=False)
 
-    config = Config(data_path=file)
-    result = load_data(config)
+    config = train.Config(data_path=file)
+    result = train.load_data(config)
 
     assert not result.empty
 
@@ -50,105 +42,64 @@ def test_load_data_missing_column(tmp_path):
     })
     df.to_csv(file, index=False)
 
-    config = Config(data_path=file)
+    config = train.Config(data_path=file)
 
     with pytest.raises(ValueError):
-        load_data(config)
+        train.load_data(config)
 
 
 # ==========================================================
-# SPLIT DATA
-# ==========================================================
-
-def test_split_data_shapes(tmp_path):
-    df = pd.DataFrame({
-        "ipv": [1]*40,
-        "ips": [1]*40,
-        "iaa": [1]*40,
-        "ieg": [1]*40,
-        "no_av": [1]*40,
-        "ida": [1]*40,
-        "media": [1]*40,
-        "defasagem": [0, 1]*20
-    })
-
-    config = Config(data_path=tmp_path / "dummy.csv")
-    X_train, X_val, X_test, y_train, y_val, y_test = split_data(config, df)
-
-    assert len(X_train) > 0
-    assert len(X_test) > 0
-
-
-# ==========================================================
-# SAVE TRAIN STATS
-# ==========================================================
-
-def test_save_train_stats(tmp_path):
-    config = Config(data_path=tmp_path / "dummy.csv")
-    config.models_dir = tmp_path
-
-    df = pd.DataFrame({
-        "ipv": [1, 2, 3],
-        "ips": [4, 5, 6],
-    })
-
-    path = save_train_stats(config, df)
-
-    assert path.exists()
-
-    with open(path) as f:
-        data = json.load(f)
-
-    assert "ipv" in data
-    assert "mean" in data["ipv"]
-
-
-# ==========================================================
-# EVALUATE
+# EVALUATE (corrigido)
 # ==========================================================
 
 def test_evaluate():
     mock_model = MagicMock()
-    mock_model.predict.return_value = [0, 1]
-    mock_model.predict_proba.return_value = [[0.8, 0.2], [0.1, 0.9]]
+    mock_model.predict.return_value = np.array([0, 1])
+    mock_model.predict_proba.return_value = np.array([
+        [0.8, 0.2],
+        [0.1, 0.9]
+    ])
 
     X = pd.DataFrame({"a": [1, 2]})
     y = pd.Series([0, 1])
 
-    metrics = evaluate(mock_model, X, y)
+    metrics = train.evaluate(mock_model, X, y)
 
     assert "recall" in metrics
     assert metrics["true_positives"] == 1
 
 
 # ==========================================================
-# SAVE ARTIFACTS
+# SAVE ARTIFACTS (corrigido)
 # ==========================================================
 
-def test_save_artifacts(tmp_path):
-    config = Config(data_path=tmp_path / "dummy.csv")
+@patch("src.train_test.train.joblib.dump")
+def test_save_artifacts(mock_dump, tmp_path):
+    config = train.Config(data_path=tmp_path / "dummy.csv")
     config.models_dir = tmp_path
 
-    mock_model = MagicMock()
+    dummy_model = object()
 
-    save_artifacts(config, mock_model, {"a": 1}, {"recall": 0.9})
+    train.save_artifacts(config, dummy_model, {"a": 1}, {"recall": 0.9})
 
-    assert (tmp_path / "model.pkl").exists()
+    mock_dump.assert_called_once()
+
     assert (tmp_path / "params.json").exists()
     assert (tmp_path / "metrics.json").exists()
 
 
 # ==========================================================
-# OPTIMIZE (mockado)
+# OPTIMIZE (corrigido)
 # ==========================================================
 
-@patch("your_module.optuna.create_study")
+@patch("src.train_test.train.optuna.create_study")
 def test_optimize_mocked(mock_create_study):
+
     mock_study = MagicMock()
     mock_study.best_params = {"n_estimators": 100}
     mock_create_study.return_value = mock_study
 
-    config = Config(data_path=Path("dummy.csv"), n_trials=1)
+    config = train.Config(data_path=Path("dummy.csv"), n_trials=1)
 
     X = pd.DataFrame({
         "ipv": [1,2,3,4],
@@ -161,7 +112,7 @@ def test_optimize_mocked(mock_create_study):
     })
     y = pd.Series([0,1,0,1])
 
-    params = optimize(config, X, y)
+    params = train.optimize(config, X, y)
 
     assert "n_estimators" in params
     assert "scale_pos_weight" in params

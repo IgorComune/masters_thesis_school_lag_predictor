@@ -7,15 +7,17 @@ import src.api.routers.inference as inference_module
 
 
 # ---------------------------------------------------------
-# Helper
+# Helper: criar app com router
 # ---------------------------------------------------------
-
 def create_app():
     app = FastAPI()
     app.include_router(inference_module.router, prefix="/inference")
     return app
 
 
+# ---------------------------------------------------------
+# Payload válido
+# ---------------------------------------------------------
 VALID_PAYLOAD = {
     "ipv": 1,
     "ips": 2,
@@ -23,12 +25,13 @@ VALID_PAYLOAD = {
     "ieg": 4,
     "no_av": 5,
     "ida": 6,
+    "media": 3.5,
 }
 
 
-# ---------------------------------------------------------
-# SUCCESS - predict_proba
-# ---------------------------------------------------------
+# =========================================================
+# TESTES - SUCESSO
+# =========================================================
 
 @patch("src.api.routers.inference.load_model")
 @patch("src.api.routers.inference.metrics.observe_request")
@@ -48,10 +51,9 @@ def test_predict_success_with_predict_proba(
     client = TestClient(app)
 
     response = client.post("/inference/predict", json=VALID_PAYLOAD)
-
     assert response.status_code == 200
-    body = response.json()
 
+    body = response.json()
     assert body["probability_class_0"] == 0.2
     assert body["probability_class_1"] == 0.8
 
@@ -59,10 +61,6 @@ def test_predict_success_with_predict_proba(
     mock_observe_inference.assert_called()
     mock_observe_request.assert_called()
 
-
-# ---------------------------------------------------------
-# SUCCESS - fallback predict()
-# ---------------------------------------------------------
 
 @patch("src.api.routers.inference.load_model")
 def test_predict_fallback_predict(mock_load_model):
@@ -75,44 +73,44 @@ def test_predict_fallback_predict(mock_load_model):
     client = TestClient(app)
 
     response = client.post("/inference/predict", json=VALID_PAYLOAD)
-
     assert response.status_code == 200
-    body = response.json()
 
+    body = response.json()
     assert body["probability_class_1"] == 1.0
     assert body["probability_class_0"] == 0.0
 
 
-# ---------------------------------------------------------
-# ERROR - missing features
-# ---------------------------------------------------------
+# =========================================================
+# TESTES - ERRO
+# =========================================================
 
 @patch("src.api.routers.inference.load_model")
 def test_predict_missing_feature(mock_load_model):
+    """Testa payload com features faltando. FastAPI/Pydantic retorna 422."""
     mock_load_model.return_value = MagicMock()
-
     app = create_app()
     client = TestClient(app)
 
-    bad_payload = {"ipv": 1}  # faltando tudo
+    bad_payload = {"ipv": 1}  # faltando campos obrigatórios
 
     response = client.post("/inference/predict", json=bad_payload)
+    assert response.status_code == 422
 
-    assert response.status_code == 400
-    assert "Missing required features" in response.text
+    # agora inspecionamos o JSON detail para cada campo faltante
+    detail = response.json().get("detail", [])
+    missing_fields = [d["loc"][-1] for d in detail]
+    for field in ["ips", "iaa", "ieg", "no_av", "ida"]:
+        assert field in missing_fields
 
-
-# ---------------------------------------------------------
-# ERROR - model not found
-# ---------------------------------------------------------
 
 @patch("src.api.routers.inference.load_model")
 def test_predict_model_load_error(mock_load_model):
+    """Simula erro ao carregar o modelo (.pkl não existe)."""
     mock_load_model.side_effect = FileNotFoundError("no model")
 
     app = create_app()
     client = TestClient(app)
 
     response = client.post("/inference/predict", json=VALID_PAYLOAD)
-
     assert response.status_code == 500
+    assert "Unexpected error" in response.text or "Model prediction error" in response.text

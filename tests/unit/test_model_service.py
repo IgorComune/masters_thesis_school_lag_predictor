@@ -1,9 +1,8 @@
 from pathlib import Path
 from unittest.mock import patch, MagicMock
-
 import pytest
 
-from src.your_module import ModelService  # <-- ajuste aqui
+from src.api.core.model_loader import ModelService
 
 
 # ---------------------------------------------------------------------
@@ -12,7 +11,6 @@ from src.your_module import ModelService  # <-- ajuste aqui
 
 def test_init_sets_path():
     service = ModelService("model.pkl")
-
     assert isinstance(service.model_path, Path)
     assert service.model is None
 
@@ -21,7 +19,8 @@ def test_init_sets_path():
 # Load
 # ---------------------------------------------------------------------
 
-@patch("src.your_module.joblib.load")
+# patch correto do joblib dentro do módulo onde ModelService.load() está definido
+@patch("src.api.core.model_loader.joblib.load")
 def test_load_model(mock_load):
     fake_model = MagicMock()
     mock_load.return_value = fake_model
@@ -80,5 +79,4 @@ def test_predict_proba_when_not_available():
     service.model = ModelWithoutProba()
 
     result = service.predict_proba([[1]])
-
     assert result is None

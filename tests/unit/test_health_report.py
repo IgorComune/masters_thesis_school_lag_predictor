@@ -3,7 +3,7 @@ import pytest
 from pathlib import Path
 from unittest.mock import patch
 
-import src.monitoring.your_module_name as module  # ajuste aqui
+import src.monitoring.model_health as health_report  # ajuste aqui
 
 
 # ==========================================================
@@ -23,8 +23,8 @@ def write_jsonl(path: Path, records):
 def test_health_report_no_file(tmp_path):
     fake_path = tmp_path / "missing.jsonl"
 
-    with patch.object(module, "LOG_PATH", fake_path):
-        result = module.health_report()
+    with patch.object(health_report, "LOG_PATH", fake_path):
+        result = health_report.health_report()
 
     assert result["total_requests"] == 0
     assert result["average_latency"] == 0.0
@@ -47,8 +47,8 @@ def test_health_report_with_data(tmp_path):
 
     write_jsonl(fake_path, records)
 
-    with patch.object(module, "LOG_PATH", fake_path):
-        result = module.health_report()
+    with patch.object(health_report, "LOG_PATH", fake_path):
+        result = health_report.health_report()
 
     assert result["total_requests"] == 3
     assert result["average_latency"] == pytest.approx(0.2)
@@ -71,8 +71,8 @@ def test_health_report_with_invalid_latency(tmp_path):
 
     write_jsonl(fake_path, records)
 
-    with patch.object(module, "LOG_PATH", fake_path):
-        result = module.health_report()
+    with patch.object(health_report, "LOG_PATH", fake_path):
+        result = health_report.health_report()
 
     assert result["total_requests"] == 3
     assert result["max_latency"] == 0.5
@@ -90,8 +90,8 @@ def test_health_report_last_5(tmp_path):
 
     write_jsonl(fake_path, records)
 
-    with patch.object(module, "LOG_PATH", fake_path):
-        result = module.health_report()
+    with patch.object(health_report, "LOG_PATH", fake_path):
+        result = health_report.health_report()
 
     assert result["total_requests"] == 10
     assert len(result["last_5_requests"]) == 5
@@ -109,7 +109,7 @@ def test_sanitize_for_json():
         "b": [1, float("inf"), {"c": float("nan")}],
     }
 
-    result = module.sanitize_for_json(data)
+    result = health_report.sanitize_for_json(data)
 
     assert result["a"] is None
     assert result["b"][1] is None

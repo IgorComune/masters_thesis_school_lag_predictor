@@ -3,7 +3,7 @@ import pytest
 from pathlib import Path
 from unittest.mock import patch
 
-import src.monitoring.your_module_name as module  # ajuste aqui
+import src.monitoring.performance_tracker as evaluate_performance  # ajuste aqui
 
 
 # ==========================================================
@@ -30,8 +30,8 @@ def test_evaluate_performance_no_labeled_data(tmp_path, capsys):
 
     write_jsonl(fake_path, records)
 
-    with patch.object(module, "LOG_PATH", str(fake_path)):
-        module.evaluate_performance()
+    with patch.object(evaluate_performance, "LOG_PATH", str(fake_path)):
+        evaluate_performance.evaluate_performance()
 
     captured = capsys.readouterr()
     assert "No labeled data yet." in captured.out
@@ -53,8 +53,8 @@ def test_evaluate_performance_with_data(tmp_path, capsys):
 
     write_jsonl(fake_path, records)
 
-    with patch.object(module, "LOG_PATH", str(fake_path)):
-        module.evaluate_performance()
+    with patch.object(evaluate_performance, "LOG_PATH", str(fake_path)):
+        evaluate_performance.evaluate_performance()
 
     captured = capsys.readouterr().out
 
@@ -78,8 +78,8 @@ def test_evaluate_performance_threshold_logic(tmp_path, capsys):
 
     write_jsonl(fake_path, records)
 
-    with patch.object(module, "LOG_PATH", str(fake_path)):
-        module.evaluate_performance()
+    with patch.object(evaluate_performance, "LOG_PATH", str(fake_path)):
+        evaluate_performance.evaluate_performance()
 
     captured = capsys.readouterr().out
 

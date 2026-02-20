@@ -4,20 +4,28 @@ from unittest.mock import patch, MagicMock
 
 import pandas as pd
 
-import src.data.ingestion as run_ingestion 
+import src.data.ingestion as ingestion
 
+
+# ---------------------------------------------------------
+# build_export_url
+# ---------------------------------------------------------
 
 def test_build_export_url():
     gid = 123
-    url = module.build_export_url(gid)
+    url = ingestion.build_export_url(gid)
 
     assert "format=csv" in url
     assert f"gid={gid}" in url
-    assert module.SPREADSHEET_ID in url
+    assert ingestion.SPREADSHEET_ID in url
 
 
-@patch("src.your_module.requests.get")
-@patch("src.your_module.get_run_logger")
+# ---------------------------------------------------------
+# download_sheet
+# ---------------------------------------------------------
+
+@patch("src.data.ingestion.requests.get")
+@patch("src.data.ingestion.get_run_logger")
 def test_download_sheet(mock_logger, mock_get, tmp_path):
     fake_content = b"col1,col2\n1,2\n"
 
@@ -26,14 +34,18 @@ def test_download_sheet(mock_logger, mock_get, tmp_path):
     mock_response.raise_for_status.return_value = None
     mock_get.return_value = mock_response
 
-    with patch.object(module, "RAW_DATA_DIR", tmp_path):
-        output_path = module.download_sheet.fn(year=2022, gid=999)
+    with patch.object(ingestion, "RAW_DATA_DIR", tmp_path):
+        output_path = ingestion.download_sheet.fn(year=2022, gid=999)
 
     assert output_path.exists()
     assert output_path.read_bytes() == fake_content
 
 
-@patch("src.your_module.get_run_logger")
+# ---------------------------------------------------------
+# generate_metadata
+# ---------------------------------------------------------
+
+@patch("src.data.ingestion.get_run_logger")
 def test_generate_metadata(mock_logger, tmp_path):
     csv_path = tmp_path / "2022.csv"
 
@@ -43,8 +55,8 @@ def test_generate_metadata(mock_logger, tmp_path):
     })
     df.to_csv(csv_path, index=False)
 
-    with patch.object(module, "METADATA_DIR", tmp_path):
-        module.generate_metadata.fn(csv_path)
+    with patch.object(ingestion, "METADATA_DIR", tmp_path):
+        ingestion.generate_metadata.fn(csv_path)
 
     metadata_file = tmp_path / "2022_metadata.json"
     assert metadata_file.exists()
@@ -58,16 +70,20 @@ def test_generate_metadata(mock_logger, tmp_path):
     assert "b" in metadata["columns"]
 
 
-@patch("src.your_module.generate_metadata")
-@patch("src.your_module.download_sheet")
+# ---------------------------------------------------------
+# run_ingestion (flow)
+# ---------------------------------------------------------
+
+@patch("src.data.ingestion.generate_metadata")
+@patch("src.data.ingestion.download_sheet")
 def test_run_ingestion(mock_download, mock_metadata, tmp_path):
     fake_csv = tmp_path / "file.csv"
     fake_csv.write_text("a,b\n1,2")
 
     mock_download.return_value = fake_csv
 
-    with patch.object(module, "RAW_DATA_DIR", tmp_path):
-        module.run_ingestion()
+    with patch.object(ingestion, "RAW_DATA_DIR", tmp_path):
+        ingestion.run_ingestion()
 
-    assert mock_download.call_count == len(module.SHEETS)
-    assert mock_metadata.call_count == len(module.SHEETS)
+    assert mock_download.call_count == len(ingestion.SHEETS)
+    assert mock_metadata.call_count == len(ingestion.SHEETS)

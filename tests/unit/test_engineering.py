@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from src.your_module import LineAverager  # ajuste o import
+from src.features.engineering import LineAverager  # ajuste o import
 
 
 # ==========================================================

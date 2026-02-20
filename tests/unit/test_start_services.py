@@ -2,15 +2,15 @@ import pytest
 from unittest.mock import patch, MagicMock
 from requests.exceptions import RequestException
 
-from scripts.start_services import ServiceLauncher 
+from scripts.start_services import ServiceLauncher
 
 
 # ----------------------------
 # _wait_for_http_service
 # ----------------------------
 
-@patch("your_module.requests.get")
-@patch("your_module.time.sleep", return_value=None)
+@patch("scripts.start_services.requests.get")
+@patch("scripts.start_services.time.sleep", return_value=None)
 def test_wait_for_http_service_success(mock_sleep, mock_get):
     mock_response = MagicMock()
     mock_response.status_code = 200
@@ -23,8 +23,8 @@ def test_wait_for_http_service_success(mock_sleep, mock_get):
     )
 
 
-@patch("your_module.requests.get")
-@patch("your_module.time.sleep", return_value=None)
+@patch("scripts.start_services.requests.get")
+@patch("scripts.start_services.time.sleep", return_value=None)
 def test_wait_for_http_service_expected_status(mock_sleep, mock_get):
     mock_response = MagicMock()
     mock_response.status_code = 201
@@ -38,8 +38,8 @@ def test_wait_for_http_service_expected_status(mock_sleep, mock_get):
     )
 
 
-@patch("your_module.requests.get", side_effect=RequestException)
-@patch("your_module.time.sleep", return_value=None)
+@patch("scripts.start_services.requests.get", side_effect=RequestException)
+@patch("scripts.start_services.time.sleep", return_value=None)
 def test_wait_for_http_service_timeout(mock_sleep, mock_get):
     with pytest.raises(RuntimeError):
         ServiceLauncher._wait_for_http_service(
@@ -53,7 +53,7 @@ def test_wait_for_http_service_timeout(mock_sleep, mock_get):
 # start_mlflow / start_prefect
 # ----------------------------
 
-@patch("your_module.subprocess.Popen")
+@patch("scripts.start_services.subprocess.Popen")
 @patch.object(ServiceLauncher, "_wait_for_http_service")
 def test_start_mlflow(mock_wait, mock_popen):
     mock_process = MagicMock()
@@ -67,7 +67,7 @@ def test_start_mlflow(mock_wait, mock_popen):
     assert launcher.processes[0] == mock_process
 
 
-@patch("your_module.subprocess.Popen")
+@patch("scripts.start_services.subprocess.Popen")
 @patch.object(ServiceLauncher, "_wait_for_http_service")
 def test_start_prefect(mock_wait, mock_popen):
     mock_process = MagicMock()
@@ -85,7 +85,7 @@ def test_start_prefect(mock_wait, mock_popen):
 # _shutdown
 # ----------------------------
 
-@patch("your_module.sys.exit")
+@patch("scripts.start_services.sys.exit")
 def test_shutdown_terminates_processes(mock_exit):
     launcher = ServiceLauncher()
 
