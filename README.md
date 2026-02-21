@@ -192,8 +192,9 @@ rm prometheus-2.45.0.linux-amd64.tar.gz
 cd prometheus-2.45.0.linux-amd64
 
 # Configure scrape targets (edit prometheus.yml)
-cat <<EOF >> 
-prometheus.yml
+
+* prometheus.yml
+
 scrape_configs:
   - job_name: "prometheus"
     static_configs:
@@ -203,7 +204,7 @@ scrape_configs:
     metrics_path: "/metrics/metrics"
     static_configs:
       - targets: ["127.0.0.1:8000"]
-EOF
+
 
 # Start Prometheus
 ./prometheus --config.file=prometheus.yml
@@ -406,22 +407,6 @@ curl -X POST http://127.0.0.1:10000/inference/predict \
     "ida": 6
   }'
 ```
-
-#### Docker Compose (Full Stack)
-
-```bash
-# Start all services
-docker-compose up -d
-
-# Services:
-# - API (port 8000)
-# - Prometheus (port 9090)
-# - Grafana (port 3000)
-
-# Stop all
-docker-compose down
-```
-
 ---
 
 ### Production (Render)
@@ -522,9 +507,7 @@ masters_thesis_school_lag_predictor/
 │   └── curl_examples.sh      # API testing script
 │
 ├── deployment/
-│   ├── Dockerfile            # Production container
-│   ├── docker-compose.yml    # Multi-service orchestration
-│   └── entrypoint.sh         # Container startup script
+│   └── Dockerfile            # Production container
 │
 ├── main.py                   # All-in-one launcher
 └── requirements.txt          # Python dependencies
@@ -679,61 +662,6 @@ pytest tests/unit/test_inference_router.py -v
 - **Class imbalance**: Check if threshold tuning improves precision/recall trade-off
 - **Drift false positives**: Set appropriate p-value thresholds (too sensitive → alert fatigue)
 - **Docker build cache**: Clear cache if requirements.txt changes (`docker build --no-cache`)
-
----
-
-## Troubleshooting
-
-### Common Issues
-
-**1. `ModuleNotFoundError` when running scripts**
-```bash
-# Solution: Ensure virtual environment is activated
-source .venv/bin/activate  # Linux/Mac
-.venv\Scripts\activate     # Windows
-
-# Verify Python version
-python --version  # Should be 3.12+
-```
-
-**2. Port already in use (8000, 9090, 3000)**
-```bash
-# Find process using port
-lsof -i :8000  # Linux/Mac
-netstat -ano | findstr :8000  # Windows
-
-# Kill process
-kill -9 <PID>  # Linux/Mac
-taskkill /PID <PID> /F  # Windows
-```
-
-**3. Docker build fails with "no space left on device"**
-```bash
-# Clean Docker cache
-docker system prune -a --volumes
-
-# Remove unused images
-docker image prune -a
-```
-
-**4. Prometheus cannot scrape metrics**
-- Check FastAPI is running: `curl http://localhost:8000/metrics/metrics`
-- Verify `prometheus.yml` targets match your API port (8000 for local, 10000 for Docker)
-- Restart Prometheus after config changes
-
-**5. Model file not found**
-```bash
-# Ensure model exists
-ls -lh src/models/model.pkl
-
-# If missing, train model first
-python -m src.train_test.train
-```
-
-**6. Render deployment cold start (30s timeout)**
-- This is expected on free tier after inactivity
-- Solution: Upgrade to paid tier or implement keep-alive pings
-- Monitor via Render dashboard logs
 
 ---
 
