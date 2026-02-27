@@ -57,19 +57,57 @@ Predicting student academic lag early enables targeted interventions. This proje
 
 ---
 
-## Quick Start
+## Quick Start - Linux
 
-**Test the API in 3 minutes** 
+**Test the API in 5 minutes** 
 
 ```bash
 # 1. Clone and setup
 git clone https://github.com/IgorComune/masters_thesis_school_lag_predictor.git
 cd masters_thesis_school_lag_predictor
-python3.12 -m venv .venv && source .venv/bin/activate
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-# 2. Start API server
-python main.py
+#2. External Dependencies
+
+#### Prometheus (Metrics Collection)
+
+```bash
+# Download and extract
+wget https://github.com/prometheus/prometheus/releases/download/v2.45.0/prometheus-2.45.0.linux-amd64.tar.gz
+tar xvf prometheus-2.45.0.linux-amd64.tar.gz
+rm prometheus-2.45.0.linux-amd64.tar.gz
+
+# Configure scrape targets (edit prometheus.yml)
+* Open: prometheus.yml
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+  
+  - job_name: "fastapi"
+    metrics_path: "/metrics/metrics"
+    static_configs:
+      - targets: ["127.0.0.1:8000"]
+
+
+```
+
+#### Grafana (Visualization)
+
+```bash
+# Download and extract
+wget https://dl.grafana.com/oss/release/grafana-10.1.0.linux-amd64.tar.gz
+tar -zxvf grafana-10.1.0.linux-amd64.tar.gz
+rm grafana-10.1.0.linux-amd64.tar.gz
+
+# Access at http://localhost:3000
+# Default credentials: admin/admin
+
+# 2. Launch the Project
+## Starts the API server, Grafana, Prometheus and Prefect. It also ingests, transforms, loads the data, train and test the model and launch the API.
+python3 main.py 
 
 # 3. Test prediction (in another terminal)
 curl -X POST http://localhost:8000/inference/predict \
@@ -89,7 +127,7 @@ curl -X POST http://localhost:8000/inference/predict \
 * probability_class_1: indicates the probability of lagging
 ```
 
-> **Note**: This quick start runs API-only. For full MLOps stack (Prometheus, Grafana, Prefect), see [Installation](#installation).
+> **Note**: For Development or Local Docker Deployment, see [Installation](#installation).
 
 ---
 
@@ -139,19 +177,6 @@ curl -X POST http://localhost:8000/inference/predict \
 
 ---
 
-## Features & Indicators
-
-The model uses **6 educational performance indicators** (assumed to be normalized/scaled):
-
-| Feature | Description (Placeholder - Update with actual definitions) |
-|---------|-----------------------------------------------------------|
-| `ipv`   | Student performance indicator 1 |
-| `ips`   | Student performance indicator 2 |
-| `iaa`   | Student performance indicator 3 |
-| `ieg`   | Student performance indicator 4 |
-| `no_av` | Student performance indicator 5 |
-| `ida`   | Student performance indicator 6 |
-
 > **Note**: Refer to `documents/Data Dict.pdf` for precise definitions. Feature engineering includes temporal aggregations (mean, std, trend) across years.
 
 ---
@@ -172,11 +197,10 @@ git clone https://github.com/IgorComune/masters_thesis_school_lag_predictor.git
 cd masters_thesis_school_lag_predictor
 
 # Create virtual environment
-python3.12 -m venv .venv
+python3 -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 # Install dependencies
-pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
@@ -189,11 +213,9 @@ pip install -r requirements.txt
 wget https://github.com/prometheus/prometheus/releases/download/v2.45.0/prometheus-2.45.0.linux-amd64.tar.gz
 tar xvf prometheus-2.45.0.linux-amd64.tar.gz
 rm prometheus-2.45.0.linux-amd64.tar.gz
-cd prometheus-2.45.0.linux-amd64
 
 # Configure scrape targets (edit prometheus.yml)
-
-* prometheus.yml
+* Open: prometheus.yml
 
 scrape_configs:
   - job_name: "prometheus"
@@ -238,7 +260,7 @@ cd grafana-10.1.0/bin
 jupyter notebook notebooks/
 
 # Execute in order:
-# 1. 01_eda.ipynb               - Exploratory data analysis
+# 1. 01_eda.ipynb                 - Exploratory data analysis
 # 2. 02_feature_engineering.ipynb - Feature creation
 # 3. 03_experiments_models.ipynb  - Model training + Optuna tuning
 ```
@@ -274,11 +296,9 @@ mlflow ui --backend-store-uri sqlite:///mlflow.db
 #### Local API Server
 
 ```bash
-# Start all services (FastAPI + Prometheus + Grafana)
+# Start all services (Prefect + MLFlow + FastAPI + Prometheus + Grafana)
 python main.py
 
-# Or manually:
-uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 **Available endpoints**:
@@ -309,12 +329,6 @@ curl http://localhost:8000/health/model_health
 # Prometheus metrics
 curl http://localhost:8000/metrics/metrics
 ```
-
-**Batch predictions** (via script):
-```bash
-bash scripts/curl_examples.sh
-```
-
 ---
 
 ### Monitoring
@@ -323,11 +337,7 @@ bash scripts/curl_examples.sh
 
 1. Access Grafana: http://localhost:3000
 2. Add Prometheus datasource: `http://localhost:9090`
-3. Import dashboards for:
-   - Prediction latency (p50, p95, p99)
-   - Request throughput
-   - Drift detection alerts
-   - Feature distribution changes
+3. Import dashboards
 
 #### Prefect Orchestration
 
@@ -346,8 +356,8 @@ prefect server start
 
 ```bash
 # Start FastAPI server
-python main.py
-# This starts the FastAPI application on port 8000
+python main.py # This starts the FastAPI application on port 8000
+
 
 # OR start services individually:
 uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
@@ -369,7 +379,7 @@ uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
 #### Build Image
 
 ```bash
-docker build -t school-lag-predictor:latest .
+docker build -f deployment/Dockerfile -t school-lag-predictor:latest .
 ```
 
 **Image details**:
@@ -381,14 +391,7 @@ docker build -t school-lag-predictor:latest .
 
 ```bash
 # Expose port 10000
-docker run -d \
-  --name school-lag-api \
-  -p 10000:10000 \
-  -e LOG_LEVEL=info \
-  school-lag-predictor:latest
-
-# Check logs
-docker logs -f school-lag-api
+docker run -p 10000:10000 school-lag-predictor:latest
 ```
 
 > **Port Configuration**: Docker uses port **10000** (vs port 8000 for local development) to avoid conflicts with locally running services.
@@ -713,8 +716,7 @@ pytest tests/unit/test_inference_router.py -v
 
 ## License
 
-[Insert license type - MIT, Apache 2.0, etc.]
-
+MIT License
 See `LICENSE` file for full text.
 
 ---

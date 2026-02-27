@@ -26,4 +26,4 @@ COPY src ./src
 EXPOSE 10000
 
 # Comando para iniciar API
-CMD ["sh", "-c", "uvicorn src.api.main:app --host 0.0.0.0 --port ${PORT}"]
+CMD ["sh", "-c", "uvicorn src.api.main:app --host 0.0.0.0 --port ${PORT:-10000}"]
