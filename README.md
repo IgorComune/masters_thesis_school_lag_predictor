@@ -67,8 +67,9 @@ git clone https://github.com/IgorComune/masters_thesis_school_lag_predictor.git
 cd masters_thesis_school_lag_predictor
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+```
 
-#2. External Dependencies
+### External Dependencies
 
 #### Prometheus (Metrics Collection)
 
@@ -77,10 +78,11 @@ pip install -r requirements.txt
 wget https://github.com/prometheus/prometheus/releases/download/v2.45.0/prometheus-2.45.0.linux-amd64.tar.gz
 tar xvf prometheus-2.45.0.linux-amd64.tar.gz
 rm prometheus-2.45.0.linux-amd64.tar.gz
+```
 
-# Configure scrape targets (edit prometheus.yml)
-* Open: prometheus.yml
+Edit `prometheus.yml`:
 
+```yaml
 scrape_configs:
   - job_name: "prometheus"
     static_configs:
@@ -90,8 +92,6 @@ scrape_configs:
     metrics_path: "/metrics/metrics"
     static_configs:
       - targets: ["127.0.0.1:8000"]
-
-
 ```
 
 #### Grafana (Visualization)
@@ -104,28 +104,37 @@ rm grafana-10.1.0.linux-amd64.tar.gz
 
 # Access at http://localhost:3000
 # Default credentials: admin/admin
+```
 
-# 2. Launch the Project
-## Starts the API server, Grafana, Prometheus and Prefect. It also ingests, transforms, loads the data, train and test the model and launch the API.
+### Launch the Project
+
+```bash
+# Starts the API server, Grafana, Prometheus and Prefect
+# It also ingests, transforms, loads the data, trains and tests the model
 python3 main.py 
+```
 
-# 3. Test prediction (in another terminal)
+### Test prediction
+
+```bash
+# In another terminal
 curl -X POST http://localhost:8000/inference/predict \
   -H "Content-Type: application/json" \
   -d '{"ipv": 0.5, "ips": 0.7, "iaa": 0.3, "ieg": 0.8, "no_av": 0.2, "ida": 0.6}'
 ```
 
 **Expected output**:
-```json
-   {
-      "probability_class_0":0.32471853494644165,
-      "probability_class_1":0.6752814650535583,
-      "latency":0.05233263969421387,
-      "model_version":"model"
-   }
 
-* probability_class_1: indicates the probability of lagging
+```json
+{
+  "probability_class_0": 0.32471853494644165,
+  "probability_class_1": 0.6752814650535583,
+  "latency": 0.05233263969421387,
+  "model_version": "model"
+}
 ```
+
+> **Note**: `probability_class_1` indicates the probability of lagging
 
 > **Note**: For Development or Local Docker Deployment, see [Installation](#installation).
 
@@ -169,6 +178,7 @@ curl -X POST http://localhost:8000/inference/predict \
 ```
 
 **Data Flow**:
+
 1. Raw CSVs → `src/data/ingestion.py` → Cleaned data
 2. Cleaned → `src/features/engineering.py` → Feature-engineered dataset
 3. Features → `src/train_test/train.py` → Trained XGBoost model
@@ -176,6 +186,8 @@ curl -X POST http://localhost:8000/inference/predict \
 5. Predictions → `src/monitoring/*` → Drift detection + metrics export
 
 ---
+
+## Features & Indicators
 
 > **Note**: Refer to `documents/Data Dict.pdf` for precise definitions. Feature engineering includes temporal aggregations (mean, std, trend) across years.
 
@@ -213,10 +225,11 @@ pip install -r requirements.txt
 wget https://github.com/prometheus/prometheus/releases/download/v2.45.0/prometheus-2.45.0.linux-amd64.tar.gz
 tar xvf prometheus-2.45.0.linux-amd64.tar.gz
 rm prometheus-2.45.0.linux-amd64.tar.gz
+```
 
-# Configure scrape targets (edit prometheus.yml)
-* Open: prometheus.yml
+Edit `prometheus.yml`:
 
+```yaml
 scrape_configs:
   - job_name: "prometheus"
     static_configs:
@@ -226,8 +239,9 @@ scrape_configs:
     metrics_path: "/metrics/metrics"
     static_configs:
       - targets: ["127.0.0.1:8000"]
+```
 
-
+```bash
 # Start Prometheus
 ./prometheus --config.file=prometheus.yml
 ```
@@ -266,6 +280,7 @@ jupyter notebook notebooks/
 ```
 
 **Key outputs**:
+
 - `notebooks/best_model_XGBoost_(Optuna)_*.pkl` - Trained model
 - `notebooks/best_params_*.json` - Optimal hyperparameters
 - `notebooks/model_card_*.md` - Model documentation
@@ -282,6 +297,7 @@ python -m src.train_test.test
 ```
 
 **MLflow Tracking**:
+
 ```bash
 # Start MLflow UI (port 5000)
 mlflow ui --backend-store-uri sqlite:///mlflow.db
@@ -298,10 +314,10 @@ mlflow ui --backend-store-uri sqlite:///mlflow.db
 ```bash
 # Start all services (Prefect + MLFlow + FastAPI + Prometheus + Grafana)
 python main.py
-
 ```
 
 **Available endpoints**:
+
 - **API Docs**: http://localhost:8000/docs
 - **Prediction**: `POST /inference/predict`
 - **Health Check**: `GET /health/model_health`
@@ -322,13 +338,13 @@ curl -X POST http://localhost:8000/inference/predict \
     "ida": 0.6
   }'
 
-
 # Model health
 curl http://localhost:8000/health/model_health
 
 # Prometheus metrics
 curl http://localhost:8000/metrics/metrics
 ```
+
 ---
 
 ### Monitoring
@@ -358,12 +374,12 @@ prefect server start
 # Start FastAPI server
 python main.py # This starts the FastAPI application on port 8000
 
-
 # OR start services individually:
 uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 **Service URLs** (after starting each component separately):
+
 - **FastAPI Docs**: http://localhost:8000/docs (started by `main.py`)
 - **Prometheus**: http://localhost:9090 (requires manual setup - see Installation)
 - **Grafana**: http://localhost:3000 (requires manual setup - see Installation)
@@ -383,6 +399,7 @@ docker build -f deployment/Dockerfile -t school-lag-predictor:latest .
 ```
 
 **Image details**:
+
 - Base: `python:3.12-slim`
 - Size: ~500MB (optimized with multi-stage build)
 - Healthcheck: `/health/model_health` endpoint
@@ -410,6 +427,7 @@ curl -X POST http://127.0.0.1:10000/inference/predict \
     "ida": 6
   }'
 ```
+
 ---
 
 ### Production (Render)
@@ -419,6 +437,7 @@ curl -X POST http://127.0.0.1:10000/inference/predict \
 #### Configuration
 
 Render auto-deploys from `main` branch using:
+
 - `Dockerfile` (containerized build)
 - `deployment/entrypoint.sh` (startup script)
 - Environment variables (set in Render dashboard)
@@ -441,11 +460,13 @@ curl -X POST https://masters-thesis-school-lag-predictor.onrender.com/inference/
 #### Production Considerations
 
 **Trade-offs**:
+
 - **Cold start**: Render free tier has ~30s cold start after inactivity
 - **Resource limits**: 512MB RAM (sufficient for XGBoost inference)
 - **No GPU**: CPU-only inference (~50ms latency per request)
 
 **Recommended improvements**:
+
 - Use Render paid tier for always-on instances
 - Add Redis caching for frequent predictions
 - Implement request queuing for batch inference
@@ -457,63 +478,130 @@ curl -X POST https://masters-thesis-school-lag-predictor.onrender.com/inference/
 ```
 masters_thesis_school_lag_predictor/
 │
+├── .gitignore
+├── LICENSE
+├── README.md
+├── main.py                          # All-in-one launcher (API + services)
+├── requirements.txt                 # Python dependencies
+├── mlflow.db                        # MLflow tracking database
+│
 ├── data/
-│   ├── raw/                  # Original CSVs (2022-2024)
-│   └── processed/            # Cleaned, feature-engineered datasets
+│   ├── raw/                         # Original CSVs (2022-2024)
+│   │   ├── 2022.csv
+│   │   ├── 2023.csv
+│   │   └── 2024.csv
+│   └── processed/                   # Cleaned, feature-engineered datasets
+│       ├── students_cleaned.csv
+│       ├── students_feature_engineering.csv
+│       └── students_longitudinal.csv
 │
 ├── documents/
-│   ├── Data Dict.pdf         # Feature definitions
-│   └── unitest.html          # Test coverage report
+│   ├── Data Dict.pdf                # Feature definitions
+│   ├── unitest.html                 # Test coverage report
+│   ├── assets/
+│   │   └── style.css                # HTML report styling
+│   └── data/                        # Dataset metadata
+│       ├── 2022_metadata.json
+│       ├── 2023_metadata.json
+│       ├── 2024_metadata.json
+│       └── students_longitudinal.json
 │
 ├── notebooks/
-│   ├── 01_eda.ipynb                    # Exploratory analysis
-│   ├── 02_feature_engineering.ipynb    # Feature creation
-│   ├── 03_experiments_models.ipynb     # Model training
-│   ├── best_model_*.pkl                # Saved models
-│   ├── model_card_*.md                 # Model documentation
-│   └── *_feature_importance.png        # Feature analysis plots
+│   ├── 01_eda.ipynb                           # Exploratory data analysis
+│   ├── 02_feature_engineering.ipynb           # Feature creation
+│   ├── 03_experiments_models.ipynb            # Model training + Optuna
+│   │
+│   ├── best_model_XGBoost_(Optuna)_*.pkl      # Trained models (timestamped)
+│   ├── best_params_*.json                     # Optimal hyperparameters
+│   ├── model_card_*.md                        # Model documentation
+│   ├── test_metrics*.json                     # Test set performance
+│   │
+│   ├── *_feature_importance.png               # Feature analysis plots
+│   ├── *_plots.png                            # Model-specific visualizations
+│   ├── test_evaluation_plots.png              # Final model evaluation
+│   │
+│   ├── grid_search_cv_results.csv             # GridSearch results
+│   ├── mlflow_runs_comparison.csv             # MLflow experiment comparison
+│   ├── model_comparison.csv                   # Cross-model metrics
+│   ├── model_selection_justification.txt      # Decision rationale
+│   │
+│   ├── optuna_optimization_history.html       # Interactive Optuna viz
+│   ├── optuna_param_importance.html           # Hyperparameter importance
+│   ├── optuna_trials_history.csv              # Trial logs
+│   └── optuna_xgboost_study.db                # Optuna study database
 │
 ├── src/
-│   ├── api/                  # FastAPI application
-│   │   ├── main.py           # API entrypoint
-│   │   ├── routers/          # Endpoint definitions
-│   │   └── schemas/          # Pydantic models
+│   ├── api/                         # FastAPI application
+│   │   ├── main.py                  # API entrypoint
+│   │   ├── core/
+│   │   │   ├── config.py            # Configuration management
+│   │   │   └── model_loader.py      # Model serialization
+│   │   ├── routers/
+│   │   │   ├── health.py            # Health check endpoint
+│   │   │   ├── inference.py         # Prediction endpoint
+│   │   │   └── metrics.py           # Prometheus metrics endpoint
+│   │   └── schemas/
+│   │       └── inference.py         # Pydantic request/response models
 │   │
-│   ├── data/                 # Data pipeline
-│   │   ├── ingestion.py      # CSV loading + validation
-│   │   └── transformation.py # Preprocessing
+│   ├── data/                        # Data pipeline
+│   │   ├── ingestion.py             # CSV loading + validation
+│   │   └── transformation.py        # Data preprocessing
 │   │
-│   ├── features/             # Feature engineering
-│   │   └── engineering.py    # Longitudinal feature creation
+│   ├── features/                    # Feature engineering
+│   │   └── engineering.py           # Longitudinal feature creation
 │   │
-│   ├── train_test/           # Model training
-│   │   ├── train.py          # Training pipeline
-│   │   └── test.py           # Evaluation pipeline
+│   ├── train_test/                  # Model training & evaluation
+│   │   ├── train.py                 # Training pipeline
+│   │   └── test.py                  # Evaluation pipeline
 │   │
-│   ├── models/               # Serialized artifacts
-│   │   ├── model.pkl         # Production model
-│   │   ├── params.json       # Hyperparameters
-│   │   └── metrics.json      # Performance metrics
+│   ├── models/                      # Serialized artifacts
+│   │   ├── model.pkl                # Production XGBoost model
+│   │   ├── params.json              # Model hyperparameters
+│   │   ├── metrics.json             # Training metrics
+│   │   ├── test_metrics_model.json  # Test set evaluation
+│   │   └── train_stats.json         # Training statistics
 │   │
-│   └── monitoring/           # Observability
-│       ├── drift_detector.py      # Feature drift detection
-│       ├── prediction_drift.py    # Prediction shift detection
-│       ├── performance_tracker.py # Model performance tracking
-│       └── logger.py              # Structured logging
+│   └── monitoring/                  # Observability stack
+│       ├── drift_detector.py        # Feature drift detection (KS test)
+│       ├── prediction_drift.py      # Output distribution shift (Chi-square)
+│       ├── performance_tracker.py   # Model performance tracking
+│       ├── model_health.py          # Health check logic
+│       ├── metrics.py               # Prometheus metric definitions
+│       ├── logger.py                # Structured logging
+│       └── inference_logs.jsonl     # Prediction log storage
+│
+├── monitoring/                      # Monitoring artifacts (root level)
+│   └── .gitkeep
 │
 ├── tests/
-│   └── unit/                 # Pytest test suite
+│   └── unit/                        # Pytest test suite
+│       ├── test_config.py
+│       ├── test_drift_detector.py
+│       ├── test_engineering.py
+│       ├── test_evaluate_performance.py
+│       ├── test_health_report.py
+│       ├── test_inference_*.py
+│       ├── test_ingestion.py
+│       ├── test_logger.py
+│       ├── test_longitudinal_pipeline.py
+│       ├── test_main_api.py
+│       ├── test_metrics*.py
+│       ├── test_model_*.py
+│       ├── test_prediction_drift.py
+│       ├── test_start_services.py
+│       ├── test_test_pipeline.py
+│       └── test_train.py
 │
 ├── scripts/
-│   ├── setup_mlflow.sh       # MLflow initialization
-│   ├── setup_prefect.sh      # Prefect configuration
-│   └── curl_examples.sh      # API testing script
+│   ├── setup_mlflow.sh              # MLflow initialization
+│   ├── setup_prefect.sh             # Prefect configuration
+│   ├── curl_examples.sh             # API testing examples
+│   └── start_services.py            # Service orchestration script
 │
-├── deployment/
-│   └── Dockerfile            # Production container
-│
-├── main.py                   # All-in-one launcher
-└── requirements.txt          # Python dependencies
+└── deployment/
+    ├── Dockerfile                   # Production container
+    ├── docker-compose.yml           # Multi-container orchestration
+    └── entrypoint.sh                # Container startup script
 ```
 
 ---
@@ -522,28 +610,31 @@ masters_thesis_school_lag_predictor/
 
 ### Experimentation Summary
 
-| Model          | CV F1-Score | Test F1-Score | Training Time | Inference (ms) | Notes                          |
-|----------------|-------------|---------------|---------------|----------------|--------------------------------|
-| DummyClassifier| 0.45        | 0.43          | <1s           | <1ms           | Baseline (majority class)      |
-| Random Forest  | 0.72        | 0.69          | 45s           | 5ms            | Good interpretability          |
-| LightGBM       | 0.78        | 0.75          | 12s           | 3ms            | Fast, memory-efficient         |
-| **XGBoost (Optuna)** | **0.82** | **0.79** | **120s** | **8ms** | **Best performance** ⭐ |
+| Model                | CV F1-Score | Test F1-Score | Training Time | Inference (ms) | Notes                     |
+|----------------------|-------------|---------------|---------------|----------------|---------------------------|
+| DummyClassifier      | 0.45        | 0.43          | <1s           | <1ms           | Baseline (majority class) |
+| Random Forest        | 0.72        | 0.69          | 45s           | 5ms            | Good interpretability     |
+| LightGBM             | 0.78        | 0.75          | 12s           | 3ms            | Fast, memory-efficient    |
+| **XGBoost (Optuna)** | **0.82**    | **0.79**      | **120s**      | **8ms**        | **Best performance** ⭐   |
 
 ### Why XGBoost?
 
 **Chosen approach**:
+
 - **+2% F1-score** over LightGBM (critical for academic lag prediction)
 - Better handling of **class imbalance** (assumed minority class = students with lag)
 - Optuna hyperparameter tuning: 100 trials, Bayesian optimization
 - Feature importance analysis aligned with domain knowledge
 
 **Trade-offs**:
+
 - ❌ Slower training (120s vs 12s for LightGBM)
 - ❌ Slightly higher inference latency (8ms vs 3ms)
 - ✅ Best test set generalization
 - ✅ More robust to overfitting (regularization tuned)
 
 **Rejected alternatives**:
+
 - **Random Forest**: Lower F1, but considered if interpretability is prioritized
 - **LightGBM**: Consider if latency <5ms is required (real-time constraint)
 
@@ -592,12 +683,14 @@ api_uptime_seconds 86400
 ### Performance Tracking
 
 **Logged per prediction**:
+
 - Input feature values (for drift analysis)
 - Prediction + probability
 - Latency (ms)
 - Timestamp
 
 **Aggregated metrics** (computed hourly):
+
 - Prediction distribution
 - Feature statistics (mean, std, min, max)
 - Drift alerts
@@ -621,6 +714,7 @@ pytest tests/unit/test_inference_router.py -v
 ```
 
 **Test categories**:
+
 - `test_data/`: Ingestion, transformation, validation
 - `test_features/`: Feature engineering logic
 - `test_train_test/`: Training/evaluation pipelines
@@ -628,6 +722,7 @@ pytest tests/unit/test_inference_router.py -v
 - `test_monitoring/`: Drift detection, logging
 
 **Key test scenarios**:
+
 - Edge cases: Empty input, out-of-range values
 - Data validation: Schema enforcement
 - Model loading: Corrupted pickle files
@@ -716,7 +811,7 @@ pytest tests/unit/test_inference_router.py -v
 
 ## License
 
-MIT License
+MIT License  
 See `LICENSE` file for full text.
 
 ---
@@ -741,6 +836,7 @@ If you use this project in academic work, please cite:
 ## Contact & Support
 
 **Team Members**:
+
 - **Igor Comune** - [GitHub](https://github.com/IgorComune) | [LinkedIn](https://www.linkedin.com/in/igor-comune/)
 - **Éder Ray** - [GitHub](https://github.com/ederray) | [LinkedIn](https://www.linkedin.com/in/ederray/)
 - **Mário Gottardello** - [GitHub](https://github.com/MariolGotta) | [LinkedIn](https://www.linkedin.com/in/m%C3%A1rio-gottardello-2456a818a/)
@@ -757,6 +853,7 @@ If you use this project in academic work, please cite:
 ## Acknowledgments
 
 **Team Contributors**:
+
 - Igor Comune
 - Éder Ray
 - Mário Gottardello
@@ -764,6 +861,7 @@ If you use this project in academic work, please cite:
 - João Marcelo Mendonça
 
 **Technology Stack**:
+
 - **MLflow**: Experiment tracking
 - **Optuna**: Hyperparameter optimization
 - **Prometheus + Grafana**: Observability stack
